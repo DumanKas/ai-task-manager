@@ -1,32 +1,35 @@
-# AI Task Manager API 🤖📋
+# AI Task Manager 🤖📋
 
-A robust backend application for task management, integrated with AI for smart task categorization and priority setting.
+Task manager with AI-assisted categorization and priority suggestions.
 
-## 🚀 Features
-*   **Task Management:** Full CRUD operations for tasks.
-*   **AI Integration:** Uses OpenAI API to analyze task descriptions and automatically suggest priorities/categories.
-*   **Asynchronous Architecture:** Built with FastAPI and SQLAlchemy (async) for high performance.
-*   **Database Migrations:** Managed via Alembic for reliable schema updates.
-*   **Security:** Environment variables managed via `.env` (template provided in `.env.example`).
+> 🚧 **Status: work in progress.** The backend API is being built step by step.
+> What is already in the repo is listed below.
 
-## 🛠 Tech Stack
-*   **Framework:** FastAPI (Python 3.10+)
-*   **Database:** PostgreSQL (via SQLAlchemy 2.0 / asyncpg)
-*   **Migrations:** Alembic
-*   **AI Integration:** OpenAI API
-*   **Tools:** Pydantic, Git, Uvicorn
+## ✅ Done
+- Project structure, `requirements.txt`, `.env.example`
+- [Telegram bot part in `bot/`: describe in one line what it does]
+- pytest set up
 
-## ⚙️ How to run locally
-1. Clone the repository:
-   `git clone https://github.com/DumanKas/ai-task-manager.git`
-2. Install dependencies:
-   `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` and add your credentials:
-   `cp .env.example .env`
-4. Run database migrations:
-   `alembic upgrade head`
-5. Start the server:
-   `uvicorn app.main:app --reload`
+## 🔨 In progress / planned
+- [ ] FastAPI app skeleton (`app/main.py`, `/health`)
+- [ ] Task model and async SQLAlchemy 2.0 + PostgreSQL (asyncpg)
+- [ ] CRUD endpoints with Pydantic schemas
+- [ ] Alembic migrations
+- [ ] OpenAI integration: suggest category and priority from a task description
+- [ ] Tests for the API endpoints
+- [ ] Dockerfile and docker-compose
 
----
-*Developed by Duman Kasymkul*
+## 🛠 Tech stack
+Python 3.10+, FastAPI, SQLAlchemy 2.0 (async), PostgreSQL, Alembic, Pydantic,
+OpenAI API, pytest
+
+## ⚙️ Run locally
+Currently only the part in `bot/` can be run:
+1. `git clone https://github.com/DumanKas/ai-task-manager.git`
+2. `pip install -r requirements.txt`
+3. `cp .env.example .env` and fill in your credentials
+4. [how to start the bot]
+
+*Instructions for the API will be added when `app/` is ready.*
+
+Author: Duman Kassymkul
