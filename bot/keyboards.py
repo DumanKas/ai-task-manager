@@ -34,3 +34,11 @@ def del_task_keyboard(tasks):
         )
         rows.append([btn_delete])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+def llm_task_keyboard(task):
+    if not task:
+        return None
+    llm_kb = InlineKeyboardButton(
+            text="Разбить на шаги с помощью Сэм",
+            callback_data= f'llm_help_{task.id}')
+    return InlineKeyboardMarkup(inline_keyboard=[[llm_kb]])
