@@ -1,0 +1,15 @@
+name: duman_ne_aitysnyk
+
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest 
+    env:
+      BOT_TOKEN: 123456:ABCdef
+      DB_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiogram_bot_db
+      LLM_TOKEN: fake
+      TEST_DB_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiogram_bot_test
+    steps:
+      - uses: actions/checkout@v4
