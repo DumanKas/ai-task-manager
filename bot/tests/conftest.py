@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 from config import settings
 import pytest
-
+from core.models import User
 from core.models import Base
 @pytest.fixture
 async def session():
@@ -21,3 +21,11 @@ async def session():
           await conn.run_sync(Base.metadata.drop_all)
 
     await engine.dispose()
+
+
+@pytest.fixture
+async def create_user(session):
+    user = User(telegram_id = 123456)
+    session.add(user)
+    await session.flush()
+    return user
