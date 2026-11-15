@@ -5,6 +5,20 @@ on:
     branches: [main]
 jobs:
   test:
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aiogram_bot_test
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     runs-on: ubuntu-latest 
     env:
       BOT_TOKEN: 123456:ABCdef
@@ -18,3 +32,5 @@ jobs:
           python-version: '3.14'
       - run:
           pip install -r requirements.txt
+      - run: pytest
+        working-directory: bot
