@@ -13,3 +13,8 @@ jobs:
       TEST_DB_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiogram_bot_test
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.3'
+      - run:
+          pip install -r requirements.txt
