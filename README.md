@@ -1,5 +1,6 @@
 # AI Task Manager 🤖📋
 
+git commit -m "..."
 Task manager with AI-assisted categorization and priority suggestions.
 
 > 🚧 **Status: work in progress.** The backend API is being built step by step.

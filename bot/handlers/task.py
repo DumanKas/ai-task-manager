@@ -3,6 +3,7 @@ import logging
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.exc import SQLAlchemyError
 from aiogram import Router
+from aiogram.filters import StateFilter
 from sqlalchemy import select, update
 from aiogram.filters import Command
 from core.models import Task
@@ -18,10 +19,11 @@ from html import escape
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from apscheduler.jobstores.base import JobLookupError
-from services.llm import ask_llm, SYSTEM_PROMPT, LLMUnavailableError
+from services.llm import ask_llm,build_messages,LLMUnavailableError
 import asyncio
 from scheduler import scheduler
 from scheduler.reminders import send_reminder
+from services.history import get_history, save_exchange
 
 router = Router()
 ALMATY = ZoneInfo("Asia/Almaty")     
@@ -107,13 +109,7 @@ async def process_deadline(message: Message, state: FSMContext, session: AsyncSe
     )
 
 
-    
 
-
-
-
-
- 
 
 
 async def cycle_for_tasks(message: Message, tasks,keyboard_builder):
@@ -209,20 +205,11 @@ async def llm_helper_callback(callback_query: CallbackQuery, session: AsyncSessi
         task_text += f"\nОписание: {task.description}"
 
 
-    messages = [
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT 
-            },
-            {
-                "role": "user",
-                "content": task_text
-            }
-        ]
+    messages = build_messages(task_text, free_chat = False)
     status_message = await callback_query.message.answer("Думаю...")
     try:
         llm_response = await ask_llm(messages=messages)
-        await status_message.edit_text(llm_response)
+        await status_message.edit_text(escape(llm_response))
     except LLMUnavailableError:
             await status_message.edit_text(
                 "Сервис временно недоступен. Пожалуйста, попробуйте повторить запрос позже."
@@ -254,6 +241,8 @@ async def delete_task_callback(callback_query: CallbackQuery, session: AsyncSess
     await callback_query.message.answer(f"Задача с ID {deleted_task} успешно удалена.")
     await callback_query.answer('Удалено')
 
+
+
 @router.message(Command("help_task"))       
 async def help_llm_handler(message: Message, session: AsyncSession, command: CommandObject):
     user = await get_user_by_telegram_id(session, message.from_user.id)
@@ -268,16 +257,7 @@ async def help_llm_handler(message: Message, session: AsyncSession, command: Com
             "Используйте команду так: <code>/help_task Текст задачи</code>"
         )
         return
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT 
-        },
-        {
-            "role": "user",
-            "content": task_text
-        }
-    ]
+    messages = build_messages(task_text, free_chat=False)
     status_message = await message.answer("Думаю...")
 
     try:
@@ -287,3 +267,36 @@ async def help_llm_handler(message: Message, session: AsyncSession, command: Com
         await status_message.edit_text(
             "Сервис временно недоступен. Пожалуйста, попробуйте повторить запрос позже."
         )
+
+
+@router.message(StateFilter(None), F.text.startswith('/'))
+async def handle_unknown_command(message: Message):
+    await message.answer(
+        "Неизвестная команда.\n\n"
+        "Доступные команды:\n"
+        "/start — Регистрация и запуск бота\n"
+        "/create_task — Создать новую задачу\n"
+        "/tasks — Список активных задач\n"
+        "/completed — Список выполненных задач\n"
+        "/help_task — Разобрать задачу с помощью ИИ"
+
+    )
+
+
+@router.message(StateFilter(None), F.text)
+async def handle_text_without_state(message:Message, session: AsyncSession):
+    user = await get_user_by_telegram_id(session, message.from_user.id)
+    if user is None:
+                await message.answer("Вы не зарегистрированы. Пожалуйста, используйте команду /start для регистрации.")
+                return
+
+    text = message.text
+    history = get_history(message.from_user.id)
+    messages = build_messages(text, free_chat= True,history = history)
+    status_message = await message.answer("Печатаю...")
+    try:
+        llm_response = await ask_llm(messages=messages)
+        save_exchange(message.from_user.id,text,llm_response)
+        await status_message.edit_text(escape(llm_response))
+    except LLMUnavailableError:
+        await status_message.edit_text("Сервис временно недоступен. Пожалуйста, попробуйте повторить запрос позже.")
