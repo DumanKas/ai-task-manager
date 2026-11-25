@@ -64,11 +64,24 @@ async def ask_llm(messages: list, max_retries: int = 3, base = 1):
         for attempt in range(max_retries):
             try:
                 response = await client.post(url= url, headers=headers, json= payload, timeout=30)
-                data = response.json()
+                
                 if response.status_code >= 500 or response.status_code == 429:
                         wait = base * (2 ** attempt)
                         await asyncio.sleep(wait)
                         continue
+                try:
+                    data = response.json()
+                except ValueError:
+                    wait = base * (2 ** attempt)
+                    await asyncio.sleep(wait)
+                    continue
+                     
+                choices = data.get('choices')
+                if not choices:
+                     wait = base * (2 ** attempt)
+                     await asyncio.sleep(wait)
+                     continue
+                     
                 if 'error' in data:
                     wait = base * (2 ** attempt)
                     await asyncio.sleep(wait)
@@ -80,7 +93,14 @@ async def ask_llm(messages: list, max_retries: int = 3, base = 1):
                 await asyncio.sleep(wait)
                 continue
             
-            return data["choices"][0]["message"]["content"]
+            message = choices[0].get("message")
+            if not message or not message.get('content'):
+                wait = base * (2 ** attempt)
+                await asyncio.sleep(wait)
+                continue
+            return message['content']
+                  
+
         raise LLMUnavailableError("LLM не ответила после всех попыток")
 
 
